@@ -1,10 +1,19 @@
 const hre = require("hardhat");
 
 const main = async () => {
-    const Upgradable = await hre.ethers.getContractFactory("TransparentUpgradeableProxy");
-    const upgradable = await Upgradable.deploy(`0x1efb3f88bc88f03fd1804a5c53b7141bbef5ded8`, `0xd570ace65c43af47101fc6250fd6fc63d1c22a86`, `0x`);
-    await upgradable.deployed();
-    console.log('successful');
+
+    const nftFactory = await hre.ethers.getContractFactory("gameWithAIGC");
+    const nftContract = await nftFactory.deploy();
+    await nftContract.deployed();
+    console.log('NFT contract deployed to:', nftContract.address);
+
+    const upgradableFactory = await hre.ethers.getContractFactory("TransparentUpgradeableProxy");
+    const upgradableContract = await upgradableFactory.deploy(nftContract.address, `0xd570ace65c43af47101fc6250fd6fc63d1c22a86`, `0x`);
+    await upgradableContract.deployed();
+    console.log('Upgradable contract deployed to:', upgradableContract.address);
+
+    const mint = await upgradableContract.mint();
+    await mint.wait();
 
 }
 
