@@ -8,10 +8,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "./icat.sol";
 
 contract iCatEgg is ERC721, AccessControl {
-    iCat public iCatCA;
+    iCat public icat;
 
-    bytes32 constant HATCH_ROLE = keccak256("HATCH_ROLE");
-    bytes32 constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
@@ -24,10 +23,13 @@ contract iCatEgg is ERC721, AccessControl {
         RED
     }
 
-    mapping ( uint256 => Color) colorOfEgg;
+    mapping ( uint256 => Color ) colorOfEgg;
+
+    // 使用error处理错误更加省gas
+    error notOwner(uint256 tokenId, address account);
 
     constructor(address iCatAddress) ERC721("iCat Egg", "EGG") {
-        iCatCA = iCat(iCatAddress);
+        icat = iCat(iCatAddress);
         _grantRole(ADMIN_ROLE, msg.sender);
     }
 
@@ -43,6 +45,7 @@ contract iCatEgg is ERC721, AccessControl {
         return "https://";
     }
 
+    // 铸造蛋
     function mint() public {
         // 随机赋予蛋颜色
         uint256 randomNumber = uint256(
@@ -53,12 +56,26 @@ contract iCatEgg is ERC721, AccessControl {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         colorOfEgg[tokenId] = Color(selectedIndex);
-        _safeMint(msg.sender, tokenId);
-        _grantRole(HATCH_ROLE, msg.sender);
+
+        // 铸造蛋NFT
+        _safeMint(msg.sender, tokenId);  
+
+        // 初始积分100
+        icat.initCredit(msg.sender, 100);
     }
 
-    function hatchOut(uint256 tokenId) public onlyRole(HATCH_ROLE) {
+    // 孵化蛋
+    function hatchOut(uint256 tokenId) public {
+        // 只有蛋的拥有者才能孵化
+        if (ownerOf(tokenId) != msg.sender) {
+            revert notOwner(tokenId, msg.sender);
+        }
+        // 孵化扣除积分10
+        icat.updateCredit(msg.sender, 10);
 
+        // 燃烧掉蛋，铸造iCat
+        _burn(tokenId);
+        icat.mint();
     }
 
 
