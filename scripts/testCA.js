@@ -39,6 +39,25 @@ const main = async () => {
     // 查看孵化完有多少分
     const creditAfterHatch = await catContract.credit(guy.address);
     console.log("Credit after hatching out is", creditAfterHatch);
+
+    // // 有蛋的用户和没蛋的用户分别签到
+    // await catContract.checkIn();
+    // console.log("Check successfully");
+    // await catContract.connect(randomGuy).checkIn();
+    // console.log("Check successfully, there must be something wrong in ca")
+
+    // 查看默认情况下猫的属性
+    const defaultCat = await catContract.getDetail(0);
+    console.log(defaultCat);
+
+    // 更改猫的名字并重新查看
+    await catContract.changeNickname(0, "小黑子");
+    const newCat = await catContract.getDetail(0);
+    console.log(newCat);
+    // 其他账号也想改，测试访问控制
+    await catContract.connect(randomGuy).changeNickname(0, "ikun");
+    const newCat2 = await catContract.getDetail(0);
+    console.log(newCat2);
     
 }
 
