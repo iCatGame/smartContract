@@ -2,7 +2,7 @@ const { ethers, upgrades } = require("hardhat");
 
 const main = async () => {
 
-    const [guy, randomGuy] = await ethers.getSigners();
+    const [guy, randomGuy, hacker] = await ethers.getSigners();
 
     // 部署cat合约
     const catFactory = await ethers.getContractFactory("iCat");
@@ -19,6 +19,10 @@ const main = async () => {
     // 给予蛋的合约以孵化的权限
     await catContract.grantHatch(eggContract.address);
     console.log("grant successful");
+
+    // 将蛋的合约设置进猫的合约中
+    await catContract.setEggContract(eggContract.address);
+    console.log("set successfully")
 
     // 铸造一个蛋
     const mintEgg = await eggContract.mint();
@@ -54,11 +58,31 @@ const main = async () => {
     await catContract.changeNickname(0, "小黑子");
     const newCat = await catContract.getDetail(0);
     console.log(newCat);
-    // 其他账号也想改，测试访问控制
-    await catContract.connect(randomGuy).changeNickname(0, "ikun");
-    const newCat2 = await catContract.getDetail(0);
-    console.log(newCat2);
+    // // 其他账号也想改，测试访问控制
+    // await catContract.connect(randomGuy).changeNickname(0, "ikun");
+    // const newCat2 = await catContract.getDetail(0);
+    // console.log(newCat2);
     
+    // 购买饰品然后查看积分和小猫状态
+    await catContract.buyOrnament(0, 0);
+    const creditAfterBuy = await catContract.credit(guy.address);
+    console.log("Credit after buying ornament is", creditAfterBuy);
+    const catAfterBuy = await catContract.getDetail(0);
+    console.log(catAfterBuy);
+
+    // 购买2个小鱼干并输出购买后的积分与小鱼干余额
+    await catContract.buyFood(1, 3);
+    const creditAfterBuyFood = await catContract.credit(guy.address);
+    console.log("Credit after buying food is", creditAfterBuyFood);
+    const foodAfterBuy = await catContract.foodBalance(guy.address, 1);
+    console.log("FIsh chips balance:", foodAfterBuy);
+
+    // 喂食
+    const feed = await catContract.feedCat(0, 1, 2);
+    const stage = await feed.wait();
+    console.log("Adult?:", stage.events[0].args);
+    const catAfterFeed = await catContract.getDetail(0);
+    console.log(catAfterFeed);
 }
 
 const runMain = async () => {
