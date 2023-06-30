@@ -16,8 +16,6 @@ contract iCat is ERC721, AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant HATCH_ROLE = keccak256("HATCH_ROLE");
 
-    // 用于记录上次签到时间
-    uint256 lastCheckin;
     uint256 ornamentPrice = 10;
     address eggContract;
 
@@ -63,6 +61,8 @@ contract iCat is ERC721, AccessControl {
     mapping ( address => mapping ( uint256 => uint256 )) public foodBalance;  // 用户食物余额(userAddress => (Food => price))
     mapping ( uint256 => uint256 ) public foodPrice;  // 食品价格(Food => price)
     mapping ( uint256 => uint256 ) public foodEnergy;  // 食品的能量(用于消除饥饿度)(Food => energy)
+    mapping ( address => uint256 ) public lastCheckin;  // 记录上次签到时间
+    mapping ( address => uint256 ) public lastFeed;  // 记录上次喂食时间
 
     // 使用error减少gas消耗
     error notOwner(uint256 tokenId, address _user );
@@ -127,7 +127,7 @@ contract iCat is ERC721, AccessControl {
 
     // 每日签到
     function checkIn() public {
-        if (block.timestamp < lastCheckin + 1 days) {
+        if (block.timestamp < lastCheckin[msg.sender] + 1 days) {
             revert notYet();
         }
         // 没有猫也没有蛋才算未注册
@@ -135,6 +135,7 @@ contract iCat is ERC721, AccessControl {
             revert notRegistered();
         }
         credit[msg.sender] += 5;
+        lastCheckin[msg.sender] = block.timestamp;
     }
 
     // 添加iCat昵称
@@ -238,6 +239,11 @@ contract iCat is ERC721, AccessControl {
             return true;
         }
         return false;
+    }
+
+    // 计算猫的排泄物
+    function calculateFeces(uint256 tokenId) public view returns (uint256) {
+
     }
 
     /** 
