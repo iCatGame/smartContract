@@ -66,7 +66,7 @@ contract iCat is ERC721, AccessControl {
     mapping ( uint256 => uint256 ) public foodEnergy;  // 食品的能量(用于消除饥饿度)(Food => energy)
     mapping ( address => uint256 ) public lastCheckin;  // 记录上次签到时间(userAddress => lastCheckinTimestamp)
     mapping ( uint256 => uint256 ) public lastFeed;  // 记录上次喂食时间(tokenId => lastFeedTimestamp)
-    mapping (uint256 => uint256 ) public lastClear;  // 记录上次清理排泄物时间(userAddress => lastClearTimestamp)
+    mapping ( uint256 => uint256 ) public lastClear;  // 记录上次清理排泄物时间(tokenId => lastClearTimestamp)
 
     // 使用error减少gas消耗
     error notOwner(uint256 tokenId, address _user );
@@ -289,13 +289,28 @@ contract iCat is ERC721, AccessControl {
         else {
             startTime = lastFeed[tokenId];
         }
-        return (block.timestamp - startTime) / 3600;
+        if (startTime > block.timestamp) {
+            return detail[tokenId].hungry;
+        }
+        return SafeMath.sub(block.timestamp, startTime) / 3600 + detail[tokenId].hungry;
     }
 
     // 计算实时健康度
     function calculateHealth(uint256 tokenId) public view returns (uint256) {
-        uint256 fecesDamage = calculateFeces(tokenId) - 10;
-        uint256 hungryDamage = calculateHunger(tokenId) - 10;
+        uint256 fecesDamage;
+        uint256 hungryDamage;
+        if (calculateFeces(tokenId) < 10) {
+            fecesDamage = 0;
+        }
+        else {
+            fecesDamage = calculateFeces(tokenId) - 10;
+        }
+        if (calculateHunger(tokenId) < 10) {
+            hungryDamage = 0;
+        }
+        else {
+            hungryDamage = calculateHunger(tokenId) - 10;
+        }
         if (detail[tokenId].healthy < fecesDamage + hungryDamage) {
             return 0;
         }
@@ -304,10 +319,24 @@ contract iCat is ERC721, AccessControl {
 
     // 计算上述因素导致的亲密度变化
     function calculateIntimacy(uint256 tokenId) public view returns (uint256) {
-        if (detail[tokenId].intimacy < (calculateHunger(tokenId) - 10) + (calculateFeces(tokenId) - 10)) {
+        uint256 fecesDamage;
+        uint256 hungryDamage;
+        if (calculateFeces(tokenId) < 10) {
+            fecesDamage = 0;
+        }
+        else {
+            fecesDamage = calculateFeces(tokenId) - 10;
+        }
+        if (calculateHunger(tokenId) < 10) {
+            hungryDamage = 0;
+        }
+        else {
+            hungryDamage = calculateHunger(tokenId) - 10;
+        }
+        if (detail[tokenId].intimacy < (hungryDamage) + (hungryDamage)) {
             return 0;
         }
-        return detail[tokenId].intimacy - (calculateHunger(tokenId) - 10) - (calculateFeces(tokenId) - 10);
+        return detail[tokenId].intimacy - (hungryDamage) - (hungryDamage);
     }
 
     // 买药

@@ -82,11 +82,14 @@ const main = async () => {
     const stage = await feed.wait();
     console.log("Adult?:", stage.events[0].args);
     const catAfterFeed = await catContract.getDetail(0);
-    console.log(catAfterFeed);
+    console.log('Cat After Feed:', catAfterFeed);
 
     // 计算排泄物
     const poop = await catContract.calculateFeces(0);
     console.log("Feces of iCat #0 is", poop);
+
+    const hungery = await catContract.calculateHunger(0);
+    console.log("The cat's hungry data is", hungery);
 }
 
 const runMain = async () => {
