@@ -37,7 +37,7 @@ contract iCatEgg is ERC721, AccessControl {
         return colorOfEgg[tokenId];
     }
 
-    function getTotalSupply() public view returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current();
     }
 

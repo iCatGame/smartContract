@@ -98,7 +98,7 @@ contract iCat is ERC721, AccessControl {
         return detail[tokenId];
     }
 
-    function getTotalSupply() public view returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current();
     }
 
@@ -230,7 +230,7 @@ contract iCat is ERC721, AccessControl {
         * 更新成长进度
          */
         //  成长进度加上亲密度权重
-        uint256 weightEnergy = SafeMath.mul((detail[tokenId].intimacy + 1), foodEnergy[uint256(_food)]);
+        uint256 weightEnergy = SafeMath.mul((calculateIntimacy(tokenId) + 1), foodEnergy[uint256(_food)]);
         uint256 simulateProgress = SafeMath.add(detail[tokenId].progress, SafeMath.mul(_amount, weightEnergy));
         // 如果加上食物的能量之后小猫能够突破下一阶段
         if (growingProgress[uint256(detail[tokenId].stage)] <= simulateProgress) {
@@ -247,14 +247,14 @@ contract iCat is ERC721, AccessControl {
         /**
         * 减少饥饿度
          */
-        if (detail[tokenId].hungry < SafeMath.mul(_amount, foodEnergy[uint256(_food)])) {
+        if (calculateHunger(tokenId) < SafeMath.mul(_amount, foodEnergy[uint256(_food)])) {
             detail[tokenId].hungry = 0;
         }
         else {
-            detail[tokenId].hungry = SafeMath.sub(detail[tokenId].hungry, SafeMath.mul(_amount, foodEnergy[uint256(_food)]));
+            detail[tokenId].hungry = SafeMath.sub(calculateHunger(tokenId), SafeMath.mul(_amount, foodEnergy[uint256(_food)]));
         }
         // 无论如何都能增加亲密度
-        detail[tokenId].intimacy += 1;
+        detail[tokenId].intimacy = calculateIntimacy(tokenId) + 1;
 
         lastFeed[tokenId] = block.timestamp;
 
@@ -450,7 +450,7 @@ contract iCat is ERC721, AccessControl {
     }
 
     function _checkDeadOrNot(uint256 tokenId) internal view {
-        if (detail[tokenId].healthy == 0) {
+        if (calculateHealth(tokenId) == 0) {
             revert alreadyDead(tokenId);
         }
     }
