@@ -57,6 +57,7 @@ contract iCat is ERC721, AccessControl {
     }
 
     mapping ( uint256 => catDetail ) public detail;  // 查看 NFT 详情(tokenId => detail)
+    mapping ( address => uint256[] ) public ownedTokenId;  // 查看拥有的所有tokenId
     mapping ( uint256 => uint256 ) public growingProgress;  // 成长进度(Stage => 点数)
     mapping ( address => uint256 ) public credit;  // 用户的分数(userAddress => credit)
     mapping ( address => mapping ( uint256 => uint256 )) public foodBalance;  // 用户食物余额(userAddress => (Food => balance))
@@ -98,6 +99,10 @@ contract iCat is ERC721, AccessControl {
         return detail[tokenId];
     }
 
+    function getOwnedTokenId(address owner) public view returns (uint256[] memory, uint256) {
+        return (ownedTokenId[owner], ownedTokenId[owner].length);
+    }
+
     function totalSupply() public view returns (uint256) {
         return _tokenIdCounter.current();
     }
@@ -107,6 +112,7 @@ contract iCat is ERC721, AccessControl {
         _tokenIdCounter.increment();
         // 这里使用tx.origin是因为孵蛋是由egg合约调用的
         _safeMint(tx.origin, tokenId);
+        ownedTokenId[tx.origin].push(tokenId);
 
         // mint完猫之后给猫初始化Detail数据
         catDetail memory defaultDetail = catDetail({
@@ -370,12 +376,39 @@ contract iCat is ERC721, AccessControl {
         emit DataUpdated(tokenId, healthy, hungry, feces, intimacy);
     }
 
+    // 二分查找特定值的索引
+    function binarySearch(uint256[] storage arr, uint256 value) internal view returns (int256) {
+        int256 left = 0;
+        int256 right = int256(arr.length) - 1;
+
+        while (left <= right) {
+            int256 mid = left + (right - left) / 2;
+            if (arr[uint256(mid)] == value) {
+                return mid;
+            }
+            if (arr[uint256(mid)] < value) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return -1;
+    }
+
     // 将去世的猫埋葬
     function buryCat(uint256 tokenId) public onlyOwner(tokenId) {
-        if (detail[tokenId].healthy != 0) {
+        if (calculateHealth(tokenId) != 0) {
             revert notDead(tokenId);
         }
         _burn(tokenId);
+        int256 index = binarySearch(ownedTokenId[msg.sender], tokenId);
+        if (index >= 0) {
+            for (uint256 i = uint256(index); i < ownedTokenId[msg.sender].length - 1; i++) {
+                ownedTokenId[msg.sender][i] = ownedTokenId[msg.sender][i + 1];
+            }
+            ownedTokenId[msg.sender].pop();
+        }
         emit BuryCat(tokenId);
     }
 

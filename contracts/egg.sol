@@ -24,6 +24,7 @@ contract iCatEgg is ERC721, AccessControl {
     }
 
     mapping ( uint256 => Color ) colorOfEgg;
+    mapping ( address => uint256[] ) public ownedTokenId;  // 查看拥有的所有tokenId
 
     // 使用error处理错误更加省gas
     error notOwner(uint256 tokenId, address account);
@@ -45,6 +46,10 @@ contract iCatEgg is ERC721, AccessControl {
         return "https://";
     }
 
+    function getOwnedTokenId(address owner) public view returns (uint256[] memory, uint256) {
+        return (ownedTokenId[owner], ownedTokenId[owner].length);
+    }
+
     // 铸造蛋
     function mint() public {
         // 随机赋予蛋颜色
@@ -59,10 +64,32 @@ contract iCatEgg is ERC721, AccessControl {
 
         // 铸造蛋NFT
         _safeMint(msg.sender, tokenId);  
+        ownedTokenId[tx.origin].push(tokenId);
 
         // 初始积分100
         icat.initCredit(msg.sender, 100);
     }
+
+    // 二分查找特定值的索引
+    function binarySearch(uint256[] storage arr, uint256 value) internal view returns (int256) {
+        int256 left = 0;
+        int256 right = int256(arr.length) - 1;
+
+        while (left <= right) {
+            int256 mid = left + (right - left) / 2;
+            if (arr[uint256(mid)] == value) {
+                return mid;
+            }
+            if (arr[uint256(mid)] < value) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return -1;
+    }
+
 
     // 孵化蛋
     function hatchOut(uint256 tokenId) public {
@@ -75,6 +102,13 @@ contract iCatEgg is ERC721, AccessControl {
 
         // 燃烧掉蛋，铸造iCat
         _burn(tokenId);
+        int256 index = binarySearch(ownedTokenId[msg.sender], tokenId);
+        if (index >= 0) {
+            for (uint256 i = uint256(index); i < ownedTokenId[msg.sender].length - 1; i++) {
+                ownedTokenId[msg.sender][i] = ownedTokenId[msg.sender][i + 1];
+            }
+            ownedTokenId[msg.sender].pop();
+        }
         icat.mint();
     }
 

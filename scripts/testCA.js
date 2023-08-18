@@ -90,6 +90,16 @@ const main = async () => {
 
     const hungery = await catContract.calculateHunger(0);
     console.log("The cat's hungry data is", hungery);
+
+    await catContract.mint();
+    await catContract.mint();
+    await catContract.mint();
+    const cats = await catContract.getOwnedTokenId(guy.address);
+    console.log("Owned token ids:", cats);
+
+    await catContract.buryCat(2);
+    const newCats = await catContract.getOwnedTokenId(guy.address);
+    console.log(newCats)
 }
 
 const runMain = async () => {
