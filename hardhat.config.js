@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-etherscan");
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -10,7 +11,7 @@ module.exports = {
       },
     },
     etherscan: {
-      apiKey: "I1PKX2ATV2VK4QW2US6FEEEVDF1XWW2AM6",
+      apiKey: process.env.ETHERSCSN_API_KEY,
   },
   solidity: {
     version: "0.8.17",

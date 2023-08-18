@@ -134,7 +134,9 @@ contract iCat is ERC721, AccessControl {
 
     // 初始化用户积分，用于外部调用
     function initCredit(address _user, uint256 _credit) public onlyRole(HATCH_ROLE) {
-        credit[_user] = _credit;
+        if (balanceOf(_user) == 0) 
+            credit[_user] = _credit;
+        }
     }
 
     // 更改用户积分，用于孵蛋扣除积分

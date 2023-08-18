@@ -1,13 +1,19 @@
-# Sample Hardhat Project
+# Hardhat合约测试
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
+## 测试合约
 
 ```shell
-npx hardhat help
-npx hardhat test
 REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+npx hardhat run scripts/testCA.js
+```
+
+## 部署合约
+
+使用[Remix](http://remix.ethereum.org/)
+
+## 开源合约
+
+```shell
+npx hardhat verify --network arbitrumGoerli <ICAT_CONTRACT_ADDRESS> 
+npx hardhat verify --network arbitrumGoerli <EGG_CONTRACT_ADDRESS> <ICAT_CONTRACT_ADDRESS>
 ```
