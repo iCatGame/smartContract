@@ -7,7 +7,7 @@ module.exports = {
     networks: {
       arbitrumGoerli: {
         url: "https://goerli-rollup.arbitrum.io/rpc",
-        accounts: []
+        accounts: [process.env.PRIVATE_KEY],
       },
     },
     etherscan: {

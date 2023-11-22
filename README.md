@@ -3,13 +3,16 @@
 ## 测试合约
 
 ```shell
-REPORT_GAS=true npx hardhat test
+# REPORT_GAS=true npx hardhat test
 npx hardhat run scripts/testCA.js
 ```
 
 ## 部署合约
 
-使用[Remix](http://remix.ethereum.org/)
+<!-- 使用[Remix](http://remix.ethereum.org/) -->
+```shell
+npx hardhat run scripts/deploy.js --network arbitrumGoerli
+```
 
 ## 开源合约
 

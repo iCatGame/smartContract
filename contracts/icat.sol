@@ -145,11 +145,14 @@ contract iCat is ERC721, AccessControl {
     }
 
     function canCheckIn(address _user) public view returns (bool) {
-        if (block.timestamp < lastCheckin[_user] + 1 days) {
-            return false;
-        }
         // 没有猫也没有蛋才算未注册
         if (balanceOf(_user) == 0 && egg(eggContract).balanceOf(_user) == 0) {
+            return false;
+        }
+        else if (lastCheckin[_user] == 0) {
+            return true;
+        }
+        else if (block.timestamp < lastCheckin[_user] + 1 days) {
             return false;
         }
         return true;

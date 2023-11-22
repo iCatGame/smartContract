@@ -97,9 +97,13 @@ const main = async () => {
     const cats = await catContract.getOwnedTokenId(guy.address);
     console.log("Owned token ids:", cats);
 
-    await catContract.buryCat(2);
-    const newCats = await catContract.getOwnedTokenId(guy.address);
-    console.log(newCats)
+    // 测试未死亡能不能埋葬
+    // await catContract.buryCat(2);
+    // const newCats = await catContract.getOwnedTokenId(guy.address);
+    // console.log(newCats)
+
+    const canCheckedIn = await catContract.canCheckIn(guy.address);
+    console.log(canCheckedIn);
 }
 
 const runMain = async () => {
